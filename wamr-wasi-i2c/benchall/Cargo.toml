@@ -1,0 +1,37 @@
+[package]
+name = "benchall"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+wamr-rust-sdk = { git = "https://github.com/bytecodealliance/wamr-rust-sdk", tag = "v1.1.0" }
+dhat = "0.3.3"
+wamr_impl = { path = "../wamr_impl" }
+native_impl = { path = "../native_impl" }
+wasmtime_impl = { path = "../wasmtime_impl" }
+pprof = { version = "0.15", features = ["flamegraph"] }
+
+[dev-dependencies]
+criterion = { version = "0.7.0", features = ["html_reports"]}
+
+[profile.release]
+debug = true
+
+[[bin]]
+name = "bench_dhat"
+path = "src/dhat.rs"
+bench = false
+
+# Run compiled benches with ./bench --bench
+# Cargo adds this argument automatically to the executable when running cargo bench
+# and criterion needs this argument
+[[bench]]
+name = "bench_crit"
+harness = false
+bench = true
+
+
+[features]
+dhat-pingpong = []
+dhat-runtime = []
+pprof-flamegraph = []

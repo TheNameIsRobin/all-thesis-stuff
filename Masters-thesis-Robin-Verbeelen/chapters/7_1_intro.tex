@@ -1,0 +1,107 @@
+\chapter{Introduction}
+\label{chap:introduction}
+
+Modern embedded systems face unprecedented challenges. They must balance security, reliability, and updatability requirements while operating under strict resource constraints. The European Union's Cyber Resilience Act, enacted in March 2024, mandates effective vulnerability management and long-term security updates throughout a product's expected lifespan~\cite{eu_cyber_res_act}. In parallel, the automotive industry is rapidly adopting \acrfull{ota} software distribution, which requires robust rollback mechanisms when updates fail~\cite{automotive_ota, iso24089}. These regulatory and industrial developments highlight a fundamental challenge: enabling secure, reliable, and updatable software for resource-constrained \acrfull{iot} devices.
+
+\acrfull{wasm} and its modular system interface specification, \acrfull{wasi}, represent a promising response to these challenges. Originally designed to execute binary code within web browsers, \acrshort{wasm} has evolved into a portable, secure, and efficient runtime technology for diverse environments~\cite{wasm_spec}. \acrshort{wasi} complements this by providing a standardized interface for interacting with filesystems, networks, and hardware resources. Crucially, it preserves \acrshort{wasm}'s strong security model by enforcing capability-based access control, which ensures that modules can only access resources that are explicitly granted.
+
+The release of \acrshort{wasi} Preview~2, together with the component model architecture, introduced new mechanisms for building modular and interoperable \acrshort{wasm} libraries, applications, and runtimes. The component model employs \acrfull{wit} files to define interface contracts between components and to enable automatic binding generation for programming languages~\cite{wasi_p2}. Nevertheless, an important gap remains in \acrshort{wasi}'s hardware interface coverage: despite the ubiquity of \acrfull{i2c} communication in embedded systems, the standardization of this protocol is only in very early stages. This thesis directly addresses closing that gap.
+
+\acrshort{i2c} is one of the most widely deployed communication protocols in embedded systems. It serves as the backbone for sensor communication, device configuration, and inter-chip data exchange in \acrshort{iot} applications~\cite{i2c_specification}. Its simplicity, addressing efficiency, and multi-controller capability have made it indispensable for embedded system designers. However, the early state of the \acrshort{wasi} \acrshort{i2c} proposal poses a barrier to broader \acrshort{wasm} adoption in embedded environments where \acrshort{i2c} communication is essential.
+
+This work therefore investigates how the proposed WASI I2C interface can be realized and evaluated in practice.
+
+
+
+
+
+
+\section{Problem Statement and Research Context}
+\label{sec:problem-statement}
+
+The prior work of Friedrich Vandenberghe~\cite{friedrich_paper} laid the foundation for \acrshort{wasi} \acrshort{i2c} standardization by advancing the proposal from its initial conceptual phase to Phase~2 of the official \acrshort{wasi} standardization process~\cite{wasi_phases}. His investigation included the design of \acrshort{wit} interfaces and proof-of-concept implementations primarily targeting \acrshort{wasi} Preview~2 environments. This work demonstrated the technical feasibility of \acrshort{wasi} \acrshort{i2c} integration and provided performance evaluations focused on Wasmtime-based implementations.
+
+However, while technically sound and aligned with the future direction of \acrshort{wasm} component model adoption, Friedrich's implementation revealed an important limitation for immediate embedded system deployment: its dependency on \acrshort{wasi} Preview~2 and the component model architecture. These technological requirements introduce constraints that conflict with the resource limitations typical of embedded environments:
+
+\begin{enumerate}
+    \item \textbf{Runtime Complexity}: \acrshort{wasi} Preview~2 implementations require sophisticated runtimes with component model support. This limits compatibility with lightweight \acrshort{wasm} runtimes such as \acrfull{wamr}, which are specifically optimized for embedded deployment.
+    
+    \item \textbf{Binary Size Overhead}: Component model features and automatically generated bindings increase binary size. This poses challenges for deployment on memory-constrained embedded systems.
+\end{enumerate}
+
+These limitations highlight a mismatch between the advanced developer experience enabled by \acrshort{wasi} Preview~2 and the strict resource constraints of embedded systems. To advance the \acrshort{wasi} \acrshort{i2c} proposal towards Phase~3 standardization, a Preview~1-compatible implementation is essential. This work therefore focuses on demonstrating such an implementation, thereby showing compatibility with embedded device constraints.
+
+
+
+
+\section{Research Questions}
+\label{sec:research-questions}
+
+This thesis addresses the following research questions, which together assess the feasibility of the \acrshort{wasi} \acrshort{i2c} proposal in resource-constrained embedded systems:
+
+\begin{researchquestion}\label{rq1}
+How can the \acrshort{wasi} Preview~2 \acrshort{i2c} interface be effectively mapped to \acrshort{wasi} Preview~1 environments while preserving functional compatibility with the proposed Preview~2 specification?
+\end{researchquestion}
+
+This question examines the technical challenges of manually implementing Preview 1 bindings while preserving the expressiveness of WIT-defined interfaces. It investigates type system adaptation strategies, error handling design, and resource management approaches that enable Preview~1 implementations to provide equivalent functionality to their Preview~2 counterparts.
+
+\begin{researchquestion}\label{rq2}
+How do Preview~1 and Preview~2 compare in terms of developer experience, maintainability, and implementation complexity?
+\end{researchquestion}
+
+This question evaluates the trade-offs between manually implementing bindings and using automatic code generation, with a focus on development effort and long-term maintainability.
+
+\begin{researchquestion}\label{rq3}
+What are the performance differences between \acrshort{wasi} Preview~2 and Preview~1 in embedded \acrshort{i2c} applications?
+\end{researchquestion}
+
+This question focuses on a quantitative comparison between \acrshort{wamr} (Preview~1) and Wasmtime (Preview~2) across multiple performance dimensions. It examines startup latency, steady-state execution overhead, memory consumption, and resource utilization efficiency to provide empirical evidence of their performance characteristics.
+
+Based on these research questions, the following contributions were made.
+
+
+
+
+
+
+\section{Contributions and Thesis Structure}
+\label{sec:contributions-structure}
+
+This thesis makes several key contributions to the \acrshort{wasi} \acrshort{i2c} standardization effort and embedded \acrshort{wasm} deployment by developing a comprehensive Preview~1 implementation ecosystem that bridges the gap between resource-constrained embedded systems and the emerging WebAssembly component model standards.
+
+\subsection{Research Contributions}
+\label{subsec:research-contributions}
+
+The primary research contributions of this thesis are as follows:
+
+\begin{enumerate}
+    \item \textbf{\acrshort{wasi} Preview~1 \acrshort{i2c} Bindings Library}: Development of a manual Rust bindings library that translates \acrshort{wit}-defined \acrshort{i2c} interface semantics to Preview~1 function call mechanisms. This library preserves type safety, error handling capabilities, and maintains semantic compatibility with the proposed \acrshort{wasi} \acrshort{i2c} specification while operating within Preview~1 constraints.
+
+    \item \textbf{Preview~1 Guest Implementation}: Creation of a \acrshort{wasm} module targeting \sloppy\texttt{wasm32-wasip1} that demonstrates the usage of the Preview~1 bindings. The implementation emphasizes maintaining functional equivalence with the Preview~2 component version.
+
+    \item \textbf{\acrshort{wamr} Integration}: Implementation of a complete host runtime based on \acrshort{wamr} that provides \acrshort{i2c} hardware access through careful integration between Rust's memory safety model and \acrshort{wamr}'s C-based architecture. This contribution demonstrates practical embedded deployment strategies for \acrshort{wasi} \acrshort{i2c} applications.
+
+    \item \textbf{Comparative Preview~2 Framework}: Development of a parallel \acrshort{wasm} component and Wasmtime runtime implementations, enabling a comprehensive comparison across different \acrshort{wasm} approaches for \acrshort{i2c} communication.
+
+    \item \textbf{Performance Evaluation Methodology}: Design and implementation of a benchmarking framework that measures startup latency, execution overhead, memory utilization, and resource efficiency across multiple runtime approaches, providing empirical data to guide embedded \acrshort{wasm} deployment decisions.
+\end{enumerate}
+
+\subsection{Thesis Organization}
+\label{subsec:thesis-organization}
+
+This thesis is structured to progressively address the research questions through a combination of background presentation, implementation development, and empirical evaluation:
+
+\textbf{Chapter~\ref{chap:background}} establishes the technical foundation necessary for understanding the implementation challenges. It covers \acrshort{wasm} fundamentals, \acrshort{wasi} architecture, the evolution from Preview~1 to Preview~2, \acrshort{wit} interface definition and binding generation mechanisms, the \acrshort{wasm} runtime ecosystem, \acrshort{i2c} protocol specifications, and the ongoing \acrshort{wasi} \acrshort{i2c} standardization proposal.
+
+\textbf{Chapter~\ref{chap:implementation}} presents the complete development of the Preview~1 \acrshort{i2c} ecosystem, detailing the manual bindings library design, \acrshort{wamr} host integration approaches, and the comparative Preview~2 implementation. This chapter directly addresses \textbf{\autoref{rq1}} by demonstrating how Preview~2 interface semantics can be systematically adapted for Preview~1 environments, and contributes to \textbf{\autoref{rq2}} by examining the trade-offs in implementation complexity and developer experience between manual and automatically generated bindings.
+
+\textbf{Chapter~\ref{chap:eval}} details the experimental methodology and presents comprehensive performance evaluation results. Through controlled hardware experiments using Raspberry Pi and Arduino-based platforms, this chapter provides a quantitative statistical analysis of timing characteristics, memory utilization patterns, and resource efficiency. The empirical findings directly address \textbf{\autoref{rq3}} by quantifying the performance implications of different \acrshort{wasm} runtime approaches for embedded \acrshort{i2c} applications.
+
+\textbf{Chapter~\ref{chap:conclusion}} synthesizes the experimental findings and implementation insights to provide well-substantiated answers to all research questions. It examines the broader implications for embedded \acrshort{wasm} deployment, discusses the limitations of the current approach, and outlines the impact on ongoing \acrshort{wasi} \acrshort{i2c} standardization efforts.
+
+
+\textbf{Chapter~\ref{chap:future-work}} identifies promising research directions that extend this work in the direction of production-ready deployment scenarios.
+
+\textbf{Chapter~\ref{chap:ethics}} provides a brief examination of the ethical considerations surrounding \acrshort{wasm} for \acrshort{i2c} standardization and its potential impact on technological accessibility and environmental sustainability.
+
+This investigation provides practical guidance for embedded system developers considering \acrshort{wasm} adoption while directly supporting the \acrshort{wasi} \acrshort{i2c} standardization effort through the demonstration of embedded system compatibility. The findings inform ongoing standardization discussions regarding the balance between advanced developer experiences and resource-constrained deployment requirements. Ultimately, this work contributes to the advancement of \acrshort{wasm}-based solutions in embedded computing environments.
